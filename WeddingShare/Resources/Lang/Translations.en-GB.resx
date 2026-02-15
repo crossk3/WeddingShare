@@ -271,6 +271,9 @@
   <data name="Close" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="Copied_To_Clipboard" xml:space="preserve">
+    <value>Copied to clipboard</value>
+  </data>
   <data name="Contact_Admin_For_Access" xml:space="preserve">
     <value>Please contact a site administrator to provide access</value>
   </data>
@@ -339,6 +342,21 @@
   </data>
   <data name="Duplicate_Item_Detected" xml:space="preserve">
     <value>Duplicate file detected</value>
+  </data>
+  <data name="Embed_Gallery" xml:space="preserve">
+    <value>Embed Gallery</value>
+  </data>
+  <data name="Embed_URL" xml:space="preserve">
+    <value>Embed URL</value>
+  </data>
+  <data name="Embed_URL_Description" xml:space="preserve">
+    <value>Use this URL to link directly to the carousel view of your gallery</value>
+  </data>
+  <data name="Embed_IFrame_Code" xml:space="preserve">
+    <value>iFrame Embed Code</value>
+  </data>
+  <data name="Embed_IFrame_Description" xml:space="preserve">
+    <value>Copy and paste this code into your website to embed the gallery carousel</value>
   </data>
   <data name="EmailAddress" xml:space="preserve">
     <value>Email Address</value>
@@ -457,6 +475,12 @@
   <data name="Gallery_Key_Placeholder" xml:space="preserve">
     <value>Enter secret key here</value>
   </data>
+  <data name="Gallery_Readonly_Secret_Key" xml:space="preserve">
+    <value>Readonly Secret Key</value>
+  </data>
+  <data name="Gallery_Readonly_Secret_Key_Hint" xml:space="preserve">
+    <value>Optional key for view-only access (no uploads)</value>
+  </data>
   <data name="Gallery_Limit_Reached" xml:space="preserve">
     <value>The maximum allowed number of galleries has been reached</value>
   </data>
@@ -471,6 +495,21 @@
   </data>
   <data name="Gallery_Selector_Title" xml:space="preserve">
     <value>Gallery Selector</value>
+  </data>
+  <data name="Gallery_Landing_Title" xml:space="preserve">
+    <value>Photos</value>
+  </data>
+  <data name="Gallery_Landing_Description" xml:space="preserve">
+    <value>View and upload photos</value>
+  </data>
+  <data name="RSVP" xml:space="preserve">
+    <value>RSVP</value>
+  </data>
+  <data name="RSVP_Description" xml:space="preserve">
+    <value>Let us know if you can make it</value>
+  </data>
+  <data name="RSVP_Not_Configured" xml:space="preserve">
+    <value>RSVP is not configured yet.</value>
   </data>
   <data name="Generate" xml:space="preserve">
     <value>Generate</value>
@@ -1284,6 +1323,9 @@
   </data>
   <data name="Slideshow" xml:space="preserve">
     <value>Slideshow</value>
+  </data>
+  <data name="Carousel" xml:space="preserve">
+    <value>Carousel</value>
   </data>
   <data name="Sort" xml:space="preserve">
     <value>Sort</value>

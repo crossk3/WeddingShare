@@ -872,6 +872,13 @@ namespace WeddingShare.Controllers
         [RequiresRole(ReviewPermission = ReviewPermissions.View)]
         public async Task<IActionResult> ReviewPhoto(int id, ReviewAction action)
         {
+            // Prevent review actions if using readonly key
+            if (HttpContext.Items.ContainsKey("IsReadonlyKey") &&
+                (bool)HttpContext.Items["IsReadonlyKey"]!)
+            {
+                return Json(new { success = false, message = "Cannot review items with readonly access" });
+            }
+
             if (User?.Identity != null && User.Identity.IsAuthenticated)
             {
                 try
@@ -1074,6 +1081,7 @@ namespace WeddingShare.Controllers
                             {
                                 gallery.Name = model.Name;
                                 gallery.SecretKey = model.SecretKey;
+                                gallery.ReadonlySecretKey = model.ReadonlySecretKey;
 
                                 gallery = await _database.EditGallery(gallery);
                                 if (gallery != null)
@@ -1115,6 +1123,13 @@ namespace WeddingShare.Controllers
         [RequiresRole(GalleryPermission = GalleryPermissions.Wipe)]
         public async Task<IActionResult> WipeGallery(int id)
         {
+            // Prevent wipe if using readonly key
+            if (HttpContext.Items.ContainsKey("IsReadonlyKey") &&
+                (bool)HttpContext.Items["IsReadonlyKey"]!)
+            {
+                return Json(new { success = false, message = "Cannot wipe gallery with readonly access" });
+            }
+
             if (User?.Identity != null && User.Identity.IsAuthenticated)
             {
                 try
@@ -1203,6 +1218,13 @@ namespace WeddingShare.Controllers
         [RequiresRole(GalleryPermission = GalleryPermissions.Delete)]
         public async Task<IActionResult> DeleteGallery(int id)
         {
+            // Prevent deletion if using readonly key
+            if (HttpContext.Items.ContainsKey("IsReadonlyKey") &&
+                (bool)HttpContext.Items["IsReadonlyKey"]!)
+            {
+                return Json(new { success = false, message = "Cannot delete gallery with readonly access" });
+            }
+
             if (User?.Identity != null && User.Identity.IsAuthenticated)
             {
                 try
@@ -1240,6 +1262,13 @@ namespace WeddingShare.Controllers
         [RequiresRole(ReviewPermission = ReviewPermissions.Delete)]
         public async Task<IActionResult> DeletePhoto(int id)
         {
+            // Prevent deletion if using readonly key
+            if (HttpContext.Items.ContainsKey("IsReadonlyKey") &&
+                (bool)HttpContext.Items["IsReadonlyKey"]!)
+            {
+                return Json(new { success = false, message = "Cannot delete items with readonly access" });
+            }
+
             if (User?.Identity != null && User.Identity.IsAuthenticated)
             {
                 try

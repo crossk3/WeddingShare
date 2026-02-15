@@ -1,0 +1,23 @@
+@model WeddingShare.Views.Rsvp.IndexModel
+
+<div id="main-content">
+    <div class="container px-3 px-lg-1 pb-4">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="display-6">@_localizer["RSVP"].Value</h1>
+            </div>
+            <div class="card-body p-0">
+                @if (!string.IsNullOrWhiteSpace(Model?.EmbedUrl))
+                {
+                    <iframe src="@Model.EmbedUrl" style="display:block;width:100%;height:calc(100vh - 130px);border:none;overflow:hidden;"></iframe>
+                }
+                else
+                {
+                    <div class="text-center p-5">
+                        <p class="text-muted">@_localizer["RSVP_Not_Configured"].Value</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

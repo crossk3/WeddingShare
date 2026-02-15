@@ -51,12 +51,24 @@ namespace WeddingShare.Attributes
                                     queryString.Set("enc", "true");
                                     queryString.Set("key", encryptionHelper.Encrypt(key));
 
-                                    filterContext.Result = new RedirectResult($"/Gallery?{queryString.ToString()}");
+                                    filterContext.Result = new RedirectResult($"{request.Path}?{queryString.ToString()}");
                                 }
                                 else if (!string.IsNullOrWhiteSpace(gallery.SecretKey))
-                                { 
+                                {
                                     var secretKey = encryptionHelper.IsEncryptionEnabled() ? encryptionHelper.Encrypt(gallery.SecretKey) : gallery.SecretKey;
-                                    if (!string.IsNullOrWhiteSpace(secretKey) && !string.Equals(secretKey, key))
+                                    var readonlySecretKey = !string.IsNullOrWhiteSpace(gallery.ReadonlySecretKey)
+                                        ? (encryptionHelper.IsEncryptionEnabled() ? encryptionHelper.Encrypt(gallery.ReadonlySecretKey) : gallery.ReadonlySecretKey)
+                                        : null;
+
+                                    if (!string.IsNullOrWhiteSpace(secretKey) && string.Equals(secretKey, key))
+                                    {
+                                        filterContext.HttpContext.Items["IsReadonlyKey"] = false;
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(readonlySecretKey) && string.Equals(readonlySecretKey, key))
+                                    {
+                                        filterContext.HttpContext.Items["IsReadonlyKey"] = true;
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(secretKey))
                                     {
                                         var logger = filterContext.HttpContext.RequestServices.GetService<ILogger<RequiresSecretKeyAttribute>>();
                                         if (logger != null)

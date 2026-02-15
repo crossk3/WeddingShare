@@ -3,7 +3,7 @@
 @using WeddingShare.Views.Gallery
 @inject WeddingShare.Helpers.IConfigHelper _config
 
-@if (Model.ViewMode != ViewMode.Slideshow)
+@if (Model.ViewMode != ViewMode.Slideshow && Model.ViewMode != ViewMode.Carousel)
 {
     var galleryName = (!string.IsNullOrWhiteSpace(Model?.Gallery?.Identifier) && !Model.Gallery.Identifier.Equals("All", StringComparison.OrdinalIgnoreCase)) ? Model.Gallery.Name.ToLower() : "default";
 
@@ -63,6 +63,10 @@
         @if (Model.ViewMode == ViewMode.Slideshow)
         {
             <partial name="~/Views/Gallery/Modes/Slideshow.cshtml" model="Model" />
+        }
+        else if (Model.ViewMode == ViewMode.Carousel)
+        {
+            <partial name="~/Views/Gallery/Modes/Carousel.cshtml" model="Model" />
         }
         else
         {

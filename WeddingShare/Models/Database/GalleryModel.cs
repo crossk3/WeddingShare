@@ -8,6 +8,7 @@ namespace WeddingShare.Models.Database
         public string Identifier { get; set; } = GalleryHelper.GenerateGalleryIdentifier();
         public string Name { get; set; } = "Unknown";
         public string? SecretKey { get; set; }
+        public string? ReadonlySecretKey { get; set; }
         public int TotalItems { get; set; }
         public int ApprovedItems { get; set; }
         public int PendingItems { get; set; }

@@ -139,7 +139,10 @@
                                 {
                                     <img src="/images/play-button.svg" class="media-viewer-play" loading="lazy" />
                                 }
-                                @if (User?.Identity != null && User.Identity.IsAuthenticated && userPermissions.Review.HasFlag(ReviewPermissions.Delete))
+                                @if (User?.Identity != null &&
+                                     User.Identity.IsAuthenticated &&
+                                     userPermissions.Review.HasFlag(ReviewPermissions.Delete) &&
+                                     !(Context?.Items.ContainsKey("IsReadonlyKey") == true && (bool)Context.Items["IsReadonlyKey"]!))
                                 {
                                     <i class="fa fa-trash btnDeletePhoto d-lg-none" data-photo-id="@image?.Id" data-photo-name="@image?.Name"></i>
                                 }

@@ -294,11 +294,12 @@ namespace WeddingShare.Helpers.Database
 
             using (var conn = await GetConnection())
             {
-                var cmd = CreateCommand($"INSERT INTO `galleries` (`identifier`, `name`, `secret_key`, `owner`) VALUES (@Identifier, @Name, @SecretKey, @Owner); SELECT g.*, u.`username` AS `owner_name`, COUNT(gi.`id`) AS `total`, SUM(CASE WHEN gi.`state`=@ApprovedState THEN 1 ELSE 0 END) AS `approved`, SUM(CASE WHEN gi.`state`=@PendingState THEN 1 ELSE 0 END) AS `pending`, SUM(gi.file_size) AS `total_gallery_size` FROM `galleries` AS g LEFT JOIN `gallery_items` AS gi ON g.`id` = gi.`gallery_id` LEFT JOIN `users` AS u ON g.`owner` = u.`id` WHERE g.`id`=last_insert_rowid();", conn);
+                var cmd = CreateCommand($"INSERT INTO `galleries` (`identifier`, `name`, `secret_key`, `readonly_secret_key`, `owner`) VALUES (@Identifier, @Name, @SecretKey, @ReadonlySecretKey, @Owner); SELECT g.*, u.`username` AS `owner_name`, COUNT(gi.`id`) AS `total`, SUM(CASE WHEN gi.`state`=@ApprovedState THEN 1 ELSE 0 END) AS `approved`, SUM(CASE WHEN gi.`state`=@PendingState THEN 1 ELSE 0 END) AS `pending`, SUM(gi.file_size) AS `total_gallery_size` FROM `galleries` AS g LEFT JOIN `gallery_items` AS gi ON g.`id` = gi.`gallery_id` LEFT JOIN `users` AS u ON g.`owner` = u.`id` WHERE g.`id`=last_insert_rowid();", conn);
                 cmd.CommandType = CommandType.Text;
                 cmd.Parameters.AddWithValue("Identifier", model.Identifier);
                 cmd.Parameters.AddWithValue("Name", model.Name.ToLower());
                 cmd.Parameters.AddWithValue("SecretKey", !string.IsNullOrWhiteSpace(model.SecretKey) ? model.SecretKey : DBNull.Value);
+                cmd.Parameters.AddWithValue("ReadonlySecretKey", !string.IsNullOrWhiteSpace(model.ReadonlySecretKey) ? model.ReadonlySecretKey : DBNull.Value);
                 cmd.Parameters.AddWithValue("ApprovedState", (int)GalleryItemState.Approved);
                 cmd.Parameters.AddWithValue("PendingState", (int)GalleryItemState.Pending);
                 cmd.Parameters.AddWithValue("Owner", model.Owner);
@@ -332,11 +333,12 @@ namespace WeddingShare.Helpers.Database
 
             using (var conn = await GetConnection())
             {
-                var cmd = CreateCommand($"UPDATE `galleries` SET `name`=@Name, `secret_key`=@SecretKey, `owner`=@Owner WHERE `id`=@Id; SELECT g.*, u.`username` AS `owner_name`, COUNT(gi.`id`) AS `total`, SUM(CASE WHEN gi.`state`=@ApprovedState THEN 1 ELSE 0 END) AS `approved`, SUM(CASE WHEN gi.`state`=@PendingState THEN 1 ELSE 0 END) AS `pending`, SUM(gi.file_size) AS `total_gallery_size` FROM `galleries` AS g LEFT JOIN `gallery_items` AS gi ON g.`id` = gi.`gallery_id` LEFT JOIN `users` AS u ON g.`owner` = u.`id` WHERE g.`id`=@Id;", conn);
+                var cmd = CreateCommand($"UPDATE `galleries` SET `name`=@Name, `secret_key`=@SecretKey, `readonly_secret_key`=@ReadonlySecretKey, `owner`=@Owner WHERE `id`=@Id; SELECT g.*, u.`username` AS `owner_name`, COUNT(gi.`id`) AS `total`, SUM(CASE WHEN gi.`state`=@ApprovedState THEN 1 ELSE 0 END) AS `approved`, SUM(CASE WHEN gi.`state`=@PendingState THEN 1 ELSE 0 END) AS `pending`, SUM(gi.file_size) AS `total_gallery_size` FROM `galleries` AS g LEFT JOIN `gallery_items` AS gi ON g.`id` = gi.`gallery_id` LEFT JOIN `users` AS u ON g.`owner` = u.`id` WHERE g.`id`=@Id;", conn);
                 cmd.CommandType = CommandType.Text;
                 cmd.Parameters.AddWithValue("Id", model.Id);
                 cmd.Parameters.AddWithValue("Name", model.Name?.ToLower());
                 cmd.Parameters.AddWithValue("SecretKey", !string.IsNullOrWhiteSpace(model.SecretKey) ? model.SecretKey : DBNull.Value);
+                cmd.Parameters.AddWithValue("ReadonlySecretKey", !string.IsNullOrWhiteSpace(model.ReadonlySecretKey) ? model.ReadonlySecretKey : DBNull.Value);
                 cmd.Parameters.AddWithValue("ApprovedState", (int)GalleryItemState.Approved);
                 cmd.Parameters.AddWithValue("PendingState", (int)GalleryItemState.Pending);
                 cmd.Parameters.AddWithValue("Owner", model.Owner);
@@ -2052,6 +2054,7 @@ namespace WeddingShare.Helpers.Database
                             Identifier = !await reader.IsDBNullAsync("identifier") ? reader.GetString("identifier") : GalleryHelper.GenerateGalleryIdentifier(),
                             Name = !await reader.IsDBNullAsync("name") ? reader.GetString("name") : "Unknown",
                             SecretKey = !await reader.IsDBNullAsync("secret_key") ? reader.GetString("secret_key") : null,
+                            ReadonlySecretKey = !await reader.IsDBNullAsync("readonly_secret_key") ? reader.GetString("readonly_secret_key") : null,
                             TotalItems = !await reader.IsDBNullAsync("total") ? reader.GetInt32("total") : 0,
                             ApprovedItems = !await reader.IsDBNullAsync("approved") ? reader.GetInt32("approved") : 0,
                             PendingItems = !await reader.IsDBNullAsync("pending") ? reader.GetInt32("pending") : 0,

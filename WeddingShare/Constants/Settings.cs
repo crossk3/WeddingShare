@@ -144,5 +144,11 @@
             public const string Enabled = "Settings:Policies:Enabled";
             public const string CookiePolicy = "Settings:Policies:CookiePolicy";
         }
+
+        public class Rsvp
+        {
+            public const string BaseKey = "Settings:RSVP:";
+            public const string EmbedUrl = "Settings:RSVP:Embed_Url";
+        }
     }
 }

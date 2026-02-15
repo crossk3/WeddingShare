@@ -36,7 +36,7 @@
                 append.Add(new KeyValuePair<string, string>("enc", enc.ToString().ToLower()));
             }
 
-            <tr data-gallery-id="@gallery.Id" data-gallery-name="@gallery.Name" data-gallery-key="@gallery.SecretKey">
+            <tr data-gallery-id="@gallery.Id" data-gallery-name="@gallery.Name" data-gallery-key="@gallery.SecretKey" data-gallery-readonly-key="@gallery.ReadonlySecretKey">
                 <td class="gallery-name text-capitalize">@gallery.Name (@gallery.OwnerName)</td>
                 <td class="d-none d-md-table-cell text-center">@gallery.TotalItems</td>
                 <td class="d-none d-md-table-cell text-center">@gallery.ApprovedItems</td>
@@ -50,7 +50,11 @@
                 <td>
                     @if (userPermissions.Gallery.HasFlag(GalleryPermissions.View))
                     {
-                        <i class="btnOpenGallery btn btn-outline-primary fa-solid fa-up-right-from-square" data-url="@_url.GenerateFullUrl(Context?.Request, "/Gallery", append, new List<string>() { "partial" })" data-target="@(await _settings.GetOrDefault(Settings.Basic.LinksOpenNewTab, true) ? "_blank" : "_self")" alt="Open"></i>
+                        <i class="btnOpenGallery btn btn-outline-primary fa-solid fa-up-right-from-square" data-url="@_url.GenerateFullUrl(Context?.Request, "/Gallery/Index", append, new List<string>() { "partial" })" data-target="@(await _settings.GetOrDefault(Settings.Basic.LinksOpenNewTab, true) ? "_blank" : "_self")" alt="Open"></i>
+                    }
+                    @if (userPermissions.Gallery.HasFlag(GalleryPermissions.View))
+                    {
+                        <i class="btnEmbedGallery btn @(gallery.TotalItems > 0 ? "btn-outline-info" : "btn-outline-disabled") fa-solid fa-code" alt="Embed" @(gallery.TotalItems == 0 ? "disabled=disabled" : string.Empty)></i>
                     }
                     @if (userPermissions.Gallery.HasFlag(GalleryPermissions.Download))
                     {
