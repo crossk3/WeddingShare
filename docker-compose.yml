@@ -7,11 +7,14 @@ services:
     ports:
       - "5000:5000"
     environment:
+      ACCOUNT_OWNER_USERNAME: kcross
+      ACCOUNT_OWNER_PASSWORD: thisismypassword
       DATABASE_TYPE: mysql
       DATABASE_CONNECTION_STRING: "Server=mysql;Port=3306;Database=weddingshare;Uid=weddingshare;Pwd=changeme;"
+      BASE_URL: "https://weddingshare.kcross.engineering"
       RSVP_EMBED_URL: "https://keatonbengu.anrsvp.com/?embed=true"
       HEADERS_X_FRAME_OPTIONS: "ALLOWALL"
-      HEADERS_CSP: "default-src 'self' http://localhost:* ws://localhost:*; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://github.com/ https://avatars.githubusercontent.com/ data:; frame-src 'self' https://keatonbengu.anrsvp.com; frame-ancestors *;"
+      HEADERS_CSP: "default-src 'self' https://weddingshare.kcross.engineering:* wss://weddingshare.kcross.engineering:*; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://github.com/ https://avatars.githubusercontent.com/ data:; frame-src 'self' https://keatonbengu.anrsvp.com; frame-ancestors *;"
     volumes:
       - config:/app/config
       - uploads:/app/wwwroot/uploads

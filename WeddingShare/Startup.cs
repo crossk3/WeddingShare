@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Localization;
@@ -114,6 +115,15 @@ namespace WeddingShare
         {
             var config = app.ApplicationServices.GetRequiredService<IConfigHelper>();
             var settings = app.ApplicationServices.GetRequiredService<ISettingsHelper>();
+
+            // Configure forwarded headers for reverse proxy support (Caddy, nginx, etc.)
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
+                // Allow headers from any proxy (required when running in Docker behind reverse proxy)
+                KnownNetworks = { },
+                KnownProxies = { }
+            });
 
             app.UseExceptionHandler();
 
