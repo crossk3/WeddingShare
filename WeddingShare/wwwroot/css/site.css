@@ -77,6 +77,23 @@ body.embed-mode .carousel-control-next {
         background: rgba(0, 0, 0, 0.5);
     }
 
+/* Slide position counter, shown in place of the dots on large galleries */
+.carousel-mode .carousel-counter {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
 /* Adjust carousel indicators for better visibility */
 body.embed-mode .carousel-indicators button {
     width: 12px !important;

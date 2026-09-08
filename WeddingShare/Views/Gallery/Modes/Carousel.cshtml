@@ -12,6 +12,13 @@
         .GroupBy(x => x.index / imagesPerSlide)
         .Select(g => g.Select(x => x.image).ToList())
         .ToList();
+
+    // The carousel now receives the whole gallery rather than a single page, so a dot per
+    // slide stops being usable past a few dozen - show a position counter beyond that.
+    var maxIndicators = 20;
+    var slideCount = slidesData?.Count ?? 0;
+    var showIndicators = slideCount > 1 && slideCount <= maxIndicators;
+    var showCounter = slideCount > maxIndicators;
 }
 
 <div class="col-12">
@@ -19,7 +26,7 @@
     {
         <div id="galleryCarousel" class="carousel carousel-mode slide" data-bs-ride="false">
             <!-- Indicators -->
-            @if (slidesData.Count > 1)
+            @if (showIndicators)
             {
                 <div class="carousel-indicators">
                     @for (int i = 0; i < slidesData.Count; i++)
@@ -27,6 +34,13 @@
                         <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="@i"
                                 class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
                     }
+                </div>
+            }
+
+            @if (showCounter)
+            {
+                <div class="carousel-counter">
+                    <span class="carousel-counter-current">1</span> / @slideCount
                 </div>
             }
 
@@ -61,7 +75,7 @@
             </div>
 
             <!-- Controls -->
-            @if (slidesData.Count > 1)
+            @if (slideCount > 1)
             {
                 <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -75,6 +89,36 @@
         </div>
     }
 </div>
+
+@if (showCounter)
+{
+    <script>
+        (function () {
+            function bindCarouselCounter() {
+                var carousel = document.getElementById('galleryCarousel');
+                if (!carousel || carousel.dataset.counterBound) {
+                    return;
+                }
+
+                var current = carousel.querySelector('.carousel-counter-current');
+                if (!current) {
+                    return;
+                }
+
+                carousel.dataset.counterBound = 'true';
+                carousel.addEventListener('slid.bs.carousel', function (e) {
+                    current.textContent = e.to + 1;
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bindCarouselCounter);
+            } else {
+                bindCarouselCounter();
+            }
+        })();
+    </script>
+}
 
 @if (Model?.LoadScripts ?? true)
 {
