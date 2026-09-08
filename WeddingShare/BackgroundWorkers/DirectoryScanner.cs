@@ -120,11 +120,16 @@ namespace WeddingShare.BackgroundWorkers
 
                                                         if (!string.Equals(file, scannedFile, StringComparison.Ordinal))
                                                         {
-                                                            // Transcoded from HEIC - re-point any row still holding the old filename
+                                                            // Transcoded from HEIC - re-point any row still holding the old filename.
+                                                            // The checksum and size still describe the pre-conversion file, so refresh
+                                                            // them too - otherwise upload-time duplicate detection, which matches on
+                                                            // checksum, can never match this row again and re-uploads slip through.
                                                             var renamed = galleryItems.FirstOrDefault(x => string.Equals(x.Title, Path.GetFileName(scannedFile), StringComparison.OrdinalIgnoreCase));
                                                             if (renamed != null)
                                                             {
                                                                 renamed.Title = filename;
+                                                                renamed.Checksum = await fileHelper.GetChecksum(file);
+                                                                renamed.FileSize = fileHelper.FileSize(file);
                                                                 await databaseHelper.EditGalleryItem(renamed);
                                                             }
                                                         }
@@ -222,11 +227,16 @@ namespace WeddingShare.BackgroundWorkers
 
                                                             if (!string.Equals(file, scannedFile, StringComparison.Ordinal))
                                                             {
-                                                                // Transcoded from HEIC - re-point any row still holding the old filename
+                                                                // Transcoded from HEIC - re-point any row still holding the old filename.
+                                                                // The checksum and size still describe the pre-conversion file, so refresh
+                                                                // them too - otherwise upload-time duplicate detection, which matches on
+                                                                // checksum, can never match this row again and re-uploads slip through.
                                                                 var renamed = galleryItems.FirstOrDefault(x => string.Equals(x.Title, Path.GetFileName(scannedFile), StringComparison.OrdinalIgnoreCase));
                                                                 if (renamed != null)
                                                                 {
                                                                     renamed.Title = filename;
+                                                                    renamed.Checksum = await fileHelper.GetChecksum(file);
+                                                                    renamed.FileSize = fileHelper.FileSize(file);
                                                                     await databaseHelper.EditGalleryItem(renamed);
                                                                 }
                                                             }
