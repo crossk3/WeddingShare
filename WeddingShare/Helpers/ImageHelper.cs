@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.StaticFiles;
+﻿using ImageMagick;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Localization;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
@@ -14,6 +15,8 @@ namespace WeddingShare.Helpers
         Task<ImageOrientation> GetOrientation(string path);
         ImageOrientation GetOrientation(Image img);
         MediaType GetMediaType(string filePath);
+        bool IsHeif(string filePath);
+        Task<string> EnsureWebSafeFormat(string filePath);
         Task<bool> DownloadFFMPEG(string path);
     }
 
@@ -22,6 +25,19 @@ namespace WeddingShare.Helpers
         private readonly IFileHelper _fileHelper;
         private readonly ILogger _logger;
         private readonly IStringLocalizer<Lang.Translations> _localizer;
+
+        // ImageSharp ships no HEIF decoder and only Safari renders HEIC natively, so these
+        // extensions are decoded through Magick.NET and transcoded to JPEG before storage.
+        public static readonly IReadOnlyDictionary<string, string> HeifContentTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { ".heic", "image/heic" },
+            { ".heics", "image/heic-sequence" },
+            { ".heif", "image/heif" },
+            { ".heifs", "image/heif-sequence" },
+            { ".hif", "image/heif" }
+        };
+
+        private const uint WebSafeJpegQuality = 92;
 
         private static bool FfmpegInstalled = false;
 
@@ -56,7 +72,7 @@ namespace WeddingShare.Helpers
                             filePath = savePath;
                         }
 
-                        using (var img = await Image.LoadAsync(filePath))
+                        using (var img = await LoadImage(filePath))
                         {
                             var width = 0;
                             var height = 0;
@@ -117,6 +133,11 @@ namespace WeddingShare.Helpers
                         return MediaType.Video;
                     }
                 }
+                else if (this.IsHeif(path))
+                {
+                    // HEIF extensions are absent from the framework's extension-to-MIME map
+                    return MediaType.Image;
+                }
             }
             catch { }
                 
@@ -131,7 +152,7 @@ namespace WeddingShare.Helpers
             {
                 try
                 {
-                    using (var img = await Image.LoadAsync(path))
+                    using (var img = await LoadImage(path))
                     {
                         orientation = this.GetOrientation(img);
                     }
@@ -164,6 +185,68 @@ namespace WeddingShare.Helpers
             }
 
             return ImageOrientation.None;
+        }
+
+        public bool IsHeif(string filePath)
+        {
+            return HeifContentTypes.ContainsKey(Path.GetExtension(filePath));
+        }
+
+        public async Task<string> EnsureWebSafeFormat(string filePath)
+        {
+            if (!this.IsHeif(filePath) || !_fileHelper.FileExists(filePath))
+            {
+                return filePath;
+            }
+
+            var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+            var name = Path.GetFileNameWithoutExtension(filePath);
+            var convertedPath = Path.Combine(directory, $"{name}.jpg");
+
+            for (var i = 1; _fileHelper.FileExists(convertedPath); i++)
+            {
+                convertedPath = Path.Combine(directory, $"{name}-{i}.jpg");
+            }
+
+            try
+            {
+                using (var img = new MagickImage(filePath))
+                {
+                    // Bake the EXIF rotation in - the JPEG is served as-is to the browser
+                    img.AutoOrient();
+                    img.Format = MagickFormat.Jpeg;
+                    img.Quality = WebSafeJpegQuality;
+
+                    await img.WriteAsync(convertedPath);
+                }
+
+                _fileHelper.DeleteFileIfExists(filePath);
+
+                return convertedPath;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Failed to convert HEIF image to JPEG - '{filePath}'");
+                _fileHelper.DeleteFileIfExists(convertedPath);
+            }
+
+            return filePath;
+        }
+
+        private async Task<Image> LoadImage(string path)
+        {
+            if (this.IsHeif(path))
+            {
+                using (var heif = new MagickImage(path))
+                {
+                    heif.AutoOrient();
+                    heif.Format = MagickFormat.Png;
+
+                    return Image.Load(heif.ToByteArray());
+                }
+            }
+
+            return await Image.LoadAsync(path);
         }
 
         public async Task<bool> DownloadFFMPEG(string path)

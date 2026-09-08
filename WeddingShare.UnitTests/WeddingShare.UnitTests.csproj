@@ -27,4 +27,10 @@
     <ProjectReference Include="..\WeddingShare\WeddingShare.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Fixtures\Gradient.heic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

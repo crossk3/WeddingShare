@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Localization;
 using WeddingShare.BackgroundWorkers;
 using WeddingShare.Configurations;
@@ -163,7 +164,13 @@ namespace WeddingShare
                 catch { }
             }
 
-            app.UseStaticFiles();
+            var contentTypeProvider = new FileExtensionContentTypeProvider();
+            foreach (var heif in ImageHelper.HeifContentTypes)
+            {
+                contentTypeProvider.Mappings[heif.Key] = heif.Value;
+            }
+
+            app.UseStaticFiles(new StaticFileOptions() { ContentTypeProvider = contentTypeProvider });
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

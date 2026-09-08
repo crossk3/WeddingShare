@@ -103,7 +103,7 @@ namespace WeddingShare.BackgroundWorkers
                                             fileHelper.MoveDirectoryIfExists(galleryDir, galleryPath);
                                         }
 
-                                        var allowedFileTypes = settingsHelper.GetOrDefault(Settings.Gallery.AllowedFileTypes, ".jpg,.jpeg,.png,.mp4,.mov", galleryItem?.Id).Result.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                                        var allowedFileTypes = settingsHelper.GetOrDefault(Settings.Gallery.AllowedFileTypes, ".jpg,.jpeg,.png,.heic,.heif,.mp4,.mov", galleryItem?.Id).Result.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                                         var galleryItems = await databaseHelper.GetAllGalleryItems(galleryItem.Id);
 
                                         if (Path.Exists(galleryPath))
@@ -111,11 +111,24 @@ namespace WeddingShare.BackgroundWorkers
                                             var approvedFiles = fileHelper.GetFiles(galleryPath, "*.*", SearchOption.TopDirectoryOnly).Where(x => allowedFileTypes.Any(y => string.Equals(Path.GetExtension(x).Trim('.'), y.Trim('.'), StringComparison.OrdinalIgnoreCase)));
                                             if (approvedFiles != null)
                                             {
-                                                foreach (var file in approvedFiles)
+                                                foreach (var scannedFile in approvedFiles)
                                                 {
                                                     try
                                                     {
+                                                        var file = await imageHelper.EnsureWebSafeFormat(scannedFile);
                                                         var filename = Path.GetFileName(file);
+
+                                                        if (!string.Equals(file, scannedFile, StringComparison.Ordinal))
+                                                        {
+                                                            // Transcoded from HEIC - re-point any row still holding the old filename
+                                                            var renamed = galleryItems.FirstOrDefault(x => string.Equals(x.Title, Path.GetFileName(scannedFile), StringComparison.OrdinalIgnoreCase));
+                                                            if (renamed != null)
+                                                            {
+                                                                renamed.Title = filename;
+                                                                await databaseHelper.EditGalleryItem(renamed);
+                                                            }
+                                                        }
+
                                                         var g = galleryItems.FirstOrDefault(x => string.Equals(x.Title, filename, StringComparison.OrdinalIgnoreCase));
                                                         if (g == null)
                                                         {
@@ -190,7 +203,7 @@ namespace WeddingShare.BackgroundWorkers
                                                     }
                                                     catch (Exception ex)
                                                     {
-                                                        logger.LogError(ex, $"An error occurred while scanning file '{file}'");
+                                                        logger.LogError(ex, $"An error occurred while scanning file '{scannedFile}'");
                                                     }
                                                 }
                                             }
@@ -200,11 +213,24 @@ namespace WeddingShare.BackgroundWorkers
                                                 var pendingFiles = fileHelper.GetFiles(Path.Combine(galleryPath, "Pending"), "*.*", SearchOption.TopDirectoryOnly).Where(x => allowedFileTypes.Any(y => string.Equals(Path.GetExtension(x).Trim('.'), y.Trim('.'), StringComparison.OrdinalIgnoreCase)));
                                                 if (pendingFiles != null)
                                                 {
-                                                    foreach (var file in pendingFiles)
+                                                    foreach (var scannedFile in pendingFiles)
                                                     {
                                                         try
                                                         {
+                                                            var file = await imageHelper.EnsureWebSafeFormat(scannedFile);
                                                             var filename = Path.GetFileName(file);
+
+                                                            if (!string.Equals(file, scannedFile, StringComparison.Ordinal))
+                                                            {
+                                                                // Transcoded from HEIC - re-point any row still holding the old filename
+                                                                var renamed = galleryItems.FirstOrDefault(x => string.Equals(x.Title, Path.GetFileName(scannedFile), StringComparison.OrdinalIgnoreCase));
+                                                                if (renamed != null)
+                                                                {
+                                                                    renamed.Title = filename;
+                                                                    await databaseHelper.EditGalleryItem(renamed);
+                                                                }
+                                                            }
+
                                                             if (!galleryItems.Exists(x => string.Equals(x.Title, filename, StringComparison.OrdinalIgnoreCase)))
                                                             {
                                                                 await databaseHelper.AddGalleryItem(new GalleryItemModel()
@@ -221,7 +247,7 @@ namespace WeddingShare.BackgroundWorkers
                                                         }
                                                         catch (Exception ex)
                                                         {
-                                                            logger.LogError(ex, $"An error occurred while scanning file '{file}'");
+                                                            logger.LogError(ex, $"An error occurred while scanning file '{scannedFile}'");
                                                         }
                                                     }
                                                 }
