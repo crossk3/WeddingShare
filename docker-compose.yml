@@ -1,0 +1,47 @@
+services:
+  weddingshare:
+    image: kcross/wedding-share:local
+    build:
+      context: .
+      dockerfile: WeddingShare/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      ACCOUNT_OWNER_USERNAME: kcross
+      ACCOUNT_OWNER_PASSWORD: thisismypassword
+      DATABASE_TYPE: mysql
+      DATABASE_CONNECTION_STRING: "Server=mysql;Port=3306;Database=weddingshare;Uid=weddingshare;Pwd=changeme;"
+      BASE_URL: "https://weddingshare.kcross.engineering"
+      RSVP_EMBED_URL: "https://keatonbengu.anrsvp.com/?embed=true"
+      HEADERS_X_FRAME_OPTIONS: "ALLOWALL"
+      HEADERS_CSP: "default-src 'self' https://weddingshare.kcross.engineering:* wss://weddingshare.kcross.engineering:*; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://github.com/ https://avatars.githubusercontent.com/ data:; frame-src 'self' https://keatonbengu.anrsvp.com; frame-ancestors *;"
+    volumes:
+      - config:/app/config
+      - uploads:/app/wwwroot/uploads
+      - thumbnails:/app/wwwroot/thumbnails
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: weddingshare
+      MYSQL_USER: weddingshare
+      MYSQL_PASSWORD: changeme
+      MYSQL_ROOT_PASSWORD: changeme-root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  config:
+  uploads:
+  thumbnails:
+  mysql_data:

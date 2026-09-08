@@ -5,6 +5,7 @@
         Default,
         Presentation,
         Slideshow,
-        Single
+        Single,
+        Carousel
     }
 }

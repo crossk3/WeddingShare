@@ -109,7 +109,7 @@ namespace WeddingShare.Controllers
                 append.Add(new KeyValuePair<string, string>("enc", enc.ToString().ToLower()));
             }
 
-            var redirectUrl = _urlHelper.GenerateFullUrl(HttpContext.Request, "/Gallery", append);
+            var redirectUrl = _urlHelper.GenerateFullUrl(HttpContext.Request, "/Gallery/Index", append);
 
             return new JsonResult(new { success = true, redirectUrl });
         }
@@ -171,6 +171,11 @@ namespace WeddingShare.Controllers
 
                 ViewBag.IsMobile = !string.Equals("Desktop", deviceType, StringComparison.OrdinalIgnoreCase);
 
+                // Detect embed mode for clean iframe embedding
+                bool embedMode = Request.Query.ContainsKey("embed") &&
+                                 Request.Query["embed"].ToString().ToLower() == "true";
+                ViewBag.EmbedMode = embedMode;
+
                 GalleryModel? gallery = await _database.GetGallery(galleryId.Value);
                 if (gallery != null)
                 {
@@ -231,12 +236,22 @@ namespace WeddingShare.Controllers
                     }
 
                     var itemsPerPage = await _settings.GetOrDefault(Settings.Gallery.ItemsPerPage, 50, gallery?.Id);
+
+                    // GalleryWrapper only renders pagination controls for ViewMode.Default, so a paged
+                    // carousel strands every item past the first page with no way to reach it. Hand the
+                    // carousel the whole gallery instead - a limit of 0 drops the LIMIT clause entirely.
+                    var isCarousel = (ViewMode)ViewBag.ViewMode == ViewMode.Carousel;
+                    var queryLimit = isCarousel ? 0 : itemsPerPage;
+                    var queryPage = isCarousel ? 1 : currentPage;
+
                     var allowedFileTypes = (await _settings.GetOrDefault(Settings.Gallery.AllowedFileTypes, ".jpg,.jpeg,.png,.heic,.heif,.mp4,.mov", gallery?.Id)).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    var items = (await _database.GetAllGalleryItems(gallery?.Id, GalleryItemState.Approved, mediaType, orientation, galleryGroup, galleryOrder, itemsPerPage, currentPage))?.Where(x => allowedFileTypes.Any(y => string.Equals(Path.GetExtension(x.Title).Trim('.'), y.Trim('.'), StringComparison.OrdinalIgnoreCase)));
+                    var items = (await _database.GetAllGalleryItems(gallery?.Id, GalleryItemState.Approved, mediaType, orientation, galleryGroup, galleryOrder, queryLimit, queryPage))?.Where(x => allowedFileTypes.Any(y => string.Equals(Path.GetExtension(x.Title).Trim('.'), y.Trim('.'), StringComparison.OrdinalIgnoreCase)));
+
+                    var isReadonlyKey = HttpContext.Items.ContainsKey("IsReadonlyKey") && (bool)HttpContext.Items["IsReadonlyKey"]!;
 
                     var isGalleryAdmin = User?.Identity != null && User.Identity.IsAuthenticated && userPermissions.Gallery.HasFlag(GalleryPermissions.Upload);
-                    
-                    var uploadActvated = !gallery.Identifier.Equals("All", StringComparison.OrdinalIgnoreCase) && (isGalleryAdmin || await _settings.GetOrDefault(Settings.Gallery.Upload, true, gallery?.Id));
+
+                    var uploadActvated = !isReadonlyKey && !gallery.Identifier.Equals("All", StringComparison.OrdinalIgnoreCase) && (isGalleryAdmin || await _settings.GetOrDefault(Settings.Gallery.Upload, true, gallery?.Id));
                     if (uploadActvated)
                     {
                         try
@@ -283,7 +298,7 @@ namespace WeddingShare.Controllers
                     var model = new PhotoGallery()
                     {
                         Gallery = gallery,
-                        SecretKey = gallery.SecretKey,
+                        SecretKey = isReadonlyKey ? gallery.ReadonlySecretKey : gallery.SecretKey,
                         Images = items?.Select(x => {
                             var galleryIdentifier = galleryIdentifiers != null && galleryIdentifiers.ContainsKey(x.GalleryId) ? galleryIdentifiers[x.GalleryId] : gallery.Identifier;
                             return new PhotoGalleryImage()
@@ -300,7 +315,7 @@ namespace WeddingShare.Controllers
                                 MediaType = x.MediaType
                             };
                         })?.ToList(),
-                        CurrentPage = currentPage,
+                        CurrentPage = queryPage,
                         ApprovedCount = (int)itemCounts["Approved"],
                         PendingCount = (int)itemCounts["Pending"],
                         ItemsPerPage = itemsPerPage,
@@ -336,6 +351,11 @@ namespace WeddingShare.Controllers
                 {
                     string key = (Request?.Form?.FirstOrDefault(x => string.Equals("SecretKey", x.Key, StringComparison.OrdinalIgnoreCase)).Value)?.ToString() ?? string.Empty;
                     if (!string.IsNullOrWhiteSpace(gallery.SecretKey) && !string.Equals(gallery.SecretKey, key))
+                    {
+                        return Json(new { success = false, uploaded = 0, errors = new List<string>() { _localizer["Invalid_Secret_Key_Warning"].Value } });
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(gallery.ReadonlySecretKey) && string.Equals(gallery.ReadonlySecretKey, key))
                     {
                         return Json(new { success = false, uploaded = 0, errors = new List<string>() { _localizer["Invalid_Secret_Key_Warning"].Value } });
                     }
@@ -482,6 +502,11 @@ namespace WeddingShare.Controllers
                 {
                     string key = (Request?.Form?.FirstOrDefault(x => string.Equals("SecretKey", x.Key, StringComparison.OrdinalIgnoreCase)).Value)?.ToString() ?? string.Empty;
                     if (!string.IsNullOrWhiteSpace(gallery.SecretKey) && !string.Equals(gallery.SecretKey, key))
+                    {
+                        return Json(new { success = false, uploaded = 0, errors = new List<string>() { _localizer["Invalid_Secret_Key_Warning"].Value } });
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(gallery.ReadonlySecretKey) && string.Equals(gallery.ReadonlySecretKey, key))
                     {
                         return Json(new { success = false, uploaded = 0, errors = new List<string>() { _localizer["Invalid_Secret_Key_Warning"].Value } });
                     }

@@ -119,9 +119,11 @@
             <script src="~/js/account.js" asp-append-version="true"></script>
         }
     </head>
-    <body>
-        <!-- Navigation -->
-        <nav class="navbar navbar-expand-lg">
+    <body class="@(ViewBag.EmbedMode == true ? "embed-mode" : "")">
+        @if (ViewBag.EmbedMode != true)
+        {
+            <!-- Navigation -->
+            <nav class="navbar navbar-expand-lg">
             <div class="container px-3 px-lg-5 @(viewMode == ViewMode.Presentation || viewMode == ViewMode.Slideshow ? "justify-content-center" : string.Empty)">
                 <a class="navbar-brand" href="@(await _settings.GetOrDefault(Settings.Basic.HomeLink, true) ? "/" : "#")">
                     <img class="navbar-logo" src="@logo" onerror="this.onerror=null;this.src='/images/logo.png';" />
@@ -195,6 +197,7 @@
                 }
             </div>
         </nav>
+        }
 
         <!-- Body -->
         <div id="main-wrapper">
@@ -230,7 +233,7 @@
         <partial name="~/Views/Shared/_Modals.cshtml" model="null" />
         <partial name="~/Views/Shared/_2FA.cshtml" model="null" />
 
-        @if (await _settings.GetOrDefault(Settings.IdentityCheck.Enabled, true) && await _settings.GetOrDefault(Settings.IdentityCheck.ShowOnPageLoad, true) && string.IsNullOrWhiteSpace(Context?.Session?.GetString(SessionKey.ViewerIdentity)))
+        @if (await _settings.GetOrDefault(Settings.IdentityCheck.Enabled, true) && await _settings.GetOrDefault(Settings.IdentityCheck.ShowOnPageLoad, true) && string.IsNullOrWhiteSpace(Context?.Session?.GetString(SessionKey.ViewerIdentity)) && !(Context?.Items.ContainsKey("IsReadonlyKey") == true && (bool)Context.Items["IsReadonlyKey"]!))
         {
             var nameRequired = await _settings.GetOrDefault(Settings.IdentityCheck.RequireName, false);
             var emailRequired = await _settings.GetOrDefault(Settings.IdentityCheck.RequireEmail, false);
@@ -240,8 +243,10 @@
             </script>
         }
 
-        <!-- Footer -->
-        <footer class="py-1">
+        @if (ViewBag.EmbedMode != true)
+        {
+            <!-- Footer -->
+            <footer class="py-1">
             <div class="container">
                 <p class="m-0 text-white">
                     <span class="float-none">
@@ -254,11 +259,15 @@
                 </p>
             </div>
         </footer>
+        }
 
         <partial name="_CookieConsentPartial" />
 
-        <!-- Sponsors Button -->
-        <i id="btn-show-sponsors" class="fa-solid fa-bolt"></i>
+        @if (ViewBag.EmbedMode != true)
+        {
+            <!-- Sponsors Button -->
+            <i id="btn-show-sponsors" class="fa-solid fa-bolt"></i>
+        }
         
         <!-- JS -->
         @await RenderSectionAsync("Scripts", required: false)

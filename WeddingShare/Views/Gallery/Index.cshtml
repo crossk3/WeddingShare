@@ -42,7 +42,7 @@
     ViewBag.QRCodeLink = _url.GenerateFullUrl(Context.Request, Context.Request.Path, qrAppend, qrExclude);
 }
 
-@if (Model?.UploadActivated != null && Model.UploadActivated && Model.ViewMode != ViewMode.Presentation && Model.ViewMode != ViewMode.Slideshow)
+@if (Model?.UploadActivated != null && Model.UploadActivated && Model.ViewMode != ViewMode.Presentation && Model.ViewMode != ViewMode.Slideshow && ViewBag.EmbedMode != true)
 {
     var allowedFileTypes = (await _settings.GetOrDefault(Settings.Gallery.AllowedFileTypes, ".jpg,.jpeg,.png,.mp4,.mov", Model?.Gallery?.Id))?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)?.Select(x => $".{x.Trim('.')}")?.OrderBy(x => x)?.ToList() ?? new List<string>();
     var identityRequired = await _settings.GetOrDefault(Settings.IdentityCheck.RequireIdentityForUpload, false);
@@ -78,7 +78,14 @@
 
 <section class="py-1 py-lg-4">
     <div class="row mt-3 mt-lg-0">
-        @if (await _settings.GetOrDefault(Settings.Gallery.FullWidth, false, Model?.Gallery?.Id))
+        @if (ViewBag.EmbedMode == true)
+        {
+            <!-- Embed mode: Full-width gallery only, no sidebar -->
+            <div id="main-gallery" class="col-12">
+                <partial name="~/Views/Gallery/GalleryWrapper.cshtml" model="Model" />
+            </div>
+        }
+        else if (await _settings.GetOrDefault(Settings.Gallery.FullWidth, false, Model?.Gallery?.Id))
         {
             <div id="main-gallery" class="col-12 px-3 px-lg-5">
                 <partial name="~/Views/Gallery/GalleryWrapper.cshtml" model="Model" />
@@ -97,7 +104,7 @@
     </div>
 </section>
 
-@if (await _settings.GetOrDefault(Settings.Gallery.FullWidth, false, Model?.Gallery?.Id) && User?.Identity != null && User.Identity.IsAuthenticated && !Model.Gallery.Identifier.Equals("All", StringComparison.OrdinalIgnoreCase))
+@if (await _settings.GetOrDefault(Settings.Gallery.FullWidth, false, Model?.Gallery?.Id) && User?.Identity != null && User.Identity.IsAuthenticated && !Model.Gallery.Identifier.Equals("All", StringComparison.OrdinalIgnoreCase) && ViewBag.EmbedMode != true)
 {
     <!-- Settings Button -->
     <i id="btn-full-width-settings" class="fa-solid fa-gear btnGallerySettings" data-gallery-name="@Model?.Gallery?.Name" data-gallery-id="@Model?.Gallery?.Id"></i>

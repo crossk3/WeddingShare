@@ -403,6 +403,10 @@ function selectActiveTab(tab) {
                             Name: localization.translate('Gallery_Secret_Key'),
                             Hint: localization.translate('Gallery_Secret_Key_Hint'),
                             Value: secretKey
+                        }, {
+                            Id: 'gallery-readonly-key',
+                            Name: localization.translate('Gallery_Readonly_Secret_Key'),
+                            Hint: localization.translate('Gallery_Readonly_Secret_Key_Hint')
                         }],
                         Buttons: [{
                             Text: localization.translate('Create'),
@@ -423,11 +427,12 @@ function selectActiveTab(tab) {
                                 }
 
                                 let key = $('#popup-modal-field-gallery-key').val();
+                                let readonlyKey = $('#popup-modal-field-gallery-readonly-key').val();
 
                                 $.ajax({
                                     url: '/Account/AddGallery',
                                     method: 'POST',
-                                    data: { Id: 0, Name: name, SecretKey: key }
+                                    data: { Id: 0, Name: name, SecretKey: key, ReadonlySecretKey: readonlyKey }
                                 })
                                     .done(data => {
                                         if (data.success === true) {
@@ -961,6 +966,56 @@ function selectActiveTab(tab) {
             window.open($(this).data('url'), $(this).data('target'));
         });
 
+        $(document).off('click', 'i.btnEmbedGallery').on('click', 'i.btnEmbedGallery', function (e) {
+            preventDefaults(e);
+
+            if ($(this).attr('disabled') == 'disabled') {
+                return;
+            }
+
+            let row = $(this).closest('tr');
+            let identifier = row.find('.gallery-name').text().split('(')[0].trim().toLowerCase();
+            let readonlyKey = row.data('gallery-readonly-key');
+            let secretKey = row.data('gallery-key');
+
+            // Use readonly key if available, otherwise use regular secret key
+            let keyToUse = readonlyKey || secretKey;
+
+            // Build the carousel embed URL with embed=true for clean display
+            let baseUrl = window.location.origin;
+            let embedUrl = `${baseUrl}/Gallery/Index?id=${encodeURIComponent(identifier)}&key=${encodeURIComponent(keyToUse)}&mode=4&embed=true`;
+            let iframeCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0" loading="lazy"></iframe>`;
+
+            displayPopup({
+                Title: localization.translate('Embed_Gallery'),
+                CustomHtml: `
+                    <div class="mb-3">
+                        <label class="form-label"><strong>${localization.translate('Embed_URL')}</strong></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="embedUrl" value="${embedUrl}" readonly onclick="this.select();">
+                            <button class="btn btn-outline-primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('embedUrl').value); displayMessage('${localization.translate('Embed_Gallery')}', '${localization.translate('Copied_To_Clipboard')}');">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">${localization.translate('Embed_URL_Description')}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>${localization.translate('Embed_IFrame_Code')}</strong></label>
+                        <div class="input-group">
+                            <textarea class="form-control" id="embedIframe" rows="3" readonly onclick="this.select();">${iframeCode}</textarea>
+                            <button class="btn btn-outline-primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('embedIframe').value); displayMessage('${localization.translate('Embed_Gallery')}', '${localization.translate('Copied_To_Clipboard')}');">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">${localization.translate('Embed_IFrame_Description')}</small>
+                    </div>
+                `,
+                Buttons: [{
+                    Text: localization.translate('Close')
+                }]
+            });
+        });
+
         $(document).off('click', 'i.btnDownloadGallery').on('click', 'i.btnDownloadGallery', function (e) {
             preventDefaults(e);
 
@@ -1022,6 +1077,11 @@ function selectActiveTab(tab) {
                     Name: localization.translate('Gallery_Secret_Key'),
                     Value: row.data('gallery-key'),
                     Hint: localization.translate('Gallery_Secret_Key_Hint')
+                }, {
+                    Id: 'gallery-readonly-key',
+                    Name: localization.translate('Gallery_Readonly_Secret_Key'),
+                    Value: row.data('gallery-readonly-key'),
+                    Hint: localization.translate('Gallery_Readonly_Secret_Key_Hint')
                 }],
                 Buttons: [{
                     Text: localization.translate('Update'),
@@ -1042,11 +1102,12 @@ function selectActiveTab(tab) {
                         }
 
                         let key = $('#popup-modal-field-gallery-key').val();
+                        let readonlyKey = $('#popup-modal-field-gallery-readonly-key').val();
 
                         $.ajax({
                             url: '/Account/EditGallery',
                             method: 'PUT',
-                            data: { Id: id, Name: name, SecretKey: key }
+                            data: { Id: id, Name: name, SecretKey: key, ReadonlySecretKey: readonlyKey }
                         })
                             .done(data => {
                                 if (data.success === true) {

@@ -271,6 +271,9 @@
   <data name="Close" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="Copied_To_Clipboard" xml:space="preserve">
+    <value>Panoya kopyalandı</value>
+  </data>
   <data name="Contact_Admin_For_Access" xml:space="preserve">
     <value>Lütfen erişim sağlamak için bir site yöneticisiyle iletişime geçin</value>
   </data>
@@ -339,6 +342,21 @@
   </data>
   <data name="Duplicate_Item_Detected" xml:space="preserve">
     <value>Duplicate file detected</value>
+  </data>
+  <data name="Embed_Gallery" xml:space="preserve">
+    <value>Galeriyi Göm</value>
+  </data>
+  <data name="Embed_URL" xml:space="preserve">
+    <value>Gömme URL'si</value>
+  </data>
+  <data name="Embed_URL_Description" xml:space="preserve">
+    <value>Galerinizin döner görünümüne doğrudan bağlantı vermek için bu URL'yi kullanın</value>
+  </data>
+  <data name="Embed_IFrame_Code" xml:space="preserve">
+    <value>iFrame Gömme Kodu</value>
+  </data>
+  <data name="Embed_IFrame_Description" xml:space="preserve">
+    <value>Galeri dönerini web sitenize gömmek için bu kodu kopyalayıp yapıştırın</value>
   </data>
   <data name="EmailAddress" xml:space="preserve">
     <value>E-posta Adresi</value>
@@ -1284,6 +1302,9 @@
   </data>
   <data name="Slideshow" xml:space="preserve">
     <value>Slideshow</value>
+  </data>
+  <data name="Carousel" xml:space="preserve">
+    <value>Carousel</value>
   </data>
   <data name="Sort" xml:space="preserve">
     <value>Sort</value>

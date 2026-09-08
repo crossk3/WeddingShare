@@ -34,7 +34,39 @@ namespace WeddingShare.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Index()
         {
-            var model = new Views.Home.IndexModel();
+            try
+            {
+                var deviceType = HttpContext.Session.GetString(SessionKey.DeviceType);
+                if (string.IsNullOrWhiteSpace(deviceType))
+                {
+                    deviceType = (await _deviceDetector.ParseDeviceType(Request.Headers["User-Agent"].ToString())).ToString();
+                    HttpContext.Session.SetString(SessionKey.DeviceType, deviceType ?? "Desktop");
+                }
+
+                if (await _settings.GetOrDefault(Settings.Basic.SingleGalleryMode, false))
+                {
+                    var gallery = await _database.GetGallery(1);
+                    if (string.IsNullOrWhiteSpace(gallery?.SecretKey))
+                    {
+                        return RedirectToAction("Index", "Gallery", new { identifier = "default" });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{_localizer["Homepage_Load_Error"].Value} - {ex?.Message}");
+            }
+
+            return View();
+        }
+
+        [HttpGet]
+        [Route("Gallery")]
+        [Route("Home/GallerySelector")]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<IActionResult> GallerySelector()
+        {
+            var model = new Views.Home.GallerySelectorModel();
 
             try
             {
@@ -68,7 +100,7 @@ namespace WeddingShare.Controllers
                 _logger.LogError(ex, $"{_localizer["Homepage_Load_Error"].Value} - {ex?.Message}");
             }
 
-            return View(model);
+            return View("~/Views/Home/GallerySelector.cshtml", model);
         }
 
         [HttpGet]
