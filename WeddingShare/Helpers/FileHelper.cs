@@ -24,6 +24,7 @@ namespace WeddingShare.Helpers
         Task<DateTime?> GetCreationDatetime(string path);
         string BytesToHumanReadable(long bytes, int decimalPlaces = 0);
         string SanitizeFilename(string filename);
+        string? GetUploaderFromFilename(string filename);
     }
 
     public class FileHelper : IFileHelper
@@ -224,6 +225,34 @@ namespace WeddingShare.Helpers
             }
 
             return total.ToString($"{decimalFormat.TrimEnd('.')} {sizes[place]}");
+        }
+
+        // Uploads are stored as "{uploader with spaces swapped for underscores}-{guid}{ext}",
+        // so the uploader can be recovered from a file found on disk.
+        private static readonly Regex UploadedFilenamePattern = new Regex(
+            @"^(?<uploader>.+)-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            RegexOptions.Compiled);
+
+        public string? GetUploaderFromFilename(string filename)
+        {
+            try
+            {
+                var match = UploadedFilenamePattern.Match(Path.GetFileNameWithoutExtension(filename));
+                if (match.Success)
+                {
+                    var uploader = match.Groups["uploader"].Value.Replace("_", " ").Trim();
+                    if (!string.IsNullOrWhiteSpace(uploader))
+                    {
+                        return uploader;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Failed to read uploader from filename - '{filename}'");
+            }
+
+            return null;
         }
 
         public string SanitizeFilename(string filename)

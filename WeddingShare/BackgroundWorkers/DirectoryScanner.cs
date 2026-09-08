@@ -136,6 +136,7 @@ namespace WeddingShare.BackgroundWorkers
                                                             {
                                                                 GalleryId = galleryItem.Id,
                                                                 Title = filename,
+                                                                UploadedBy = fileHelper.GetUploaderFromFilename(filename),
                                                                 Checksum = await fileHelper.GetChecksum(file),
                                                                 MediaType = imageHelper.GetMediaType(file),
                                                                 State = GalleryItemState.Approved,
@@ -175,6 +176,18 @@ namespace WeddingShare.BackgroundWorkers
                                                             {
                                                                 g.UploadedDate = new FileInfo(file).CreationTimeUtc;
                                                                 updated = true;
+                                                            }
+
+                                                            if (string.IsNullOrWhiteSpace(g.UploadedBy))
+                                                            {
+                                                                // An earlier scan registered this file without an uploader,
+                                                                // leaving it credited to "Anonymous" in the gallery
+                                                                var uploader = fileHelper.GetUploaderFromFilename(g.Title);
+                                                                if (!string.IsNullOrWhiteSpace(uploader))
+                                                                {
+                                                                    g.UploadedBy = uploader;
+                                                                    updated = true;
+                                                                }
                                                             }
 
                                                             if (g.MediaType == MediaType.Unknown)
@@ -237,6 +250,7 @@ namespace WeddingShare.BackgroundWorkers
                                                                 {
                                                                     GalleryId = galleryItem.Id,
                                                                     Title = filename,
+                                                                    UploadedBy = fileHelper.GetUploaderFromFilename(filename),
                                                                     Checksum = await fileHelper.GetChecksum(file),
                                                                     MediaType = imageHelper.GetMediaType(file),
                                                                     State = GalleryItemState.Pending,
